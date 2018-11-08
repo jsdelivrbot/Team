@@ -1,83 +1,90 @@
-<?php 
+<?php
+/**
+ * This file is part of TEAM.
+ *
+ * TEAM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 2 of the License.
+ *
+ * TEAM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TEAM.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 namespace Team\Start\url;
 
-if(!defined('_TEAM_') ) die("Hello,  World");
-
-
+if (!defined('_TEAM_')) {
+    die("Hello,  World");
+}
 
 /**
- Un framework debería de proporcionar un sistema de parseo de url propio y dando la opción de reemplazarlo.
- Aquí se encuentra el código de parseo de url de TEAM. 
-
-*/
-\Team\System\Task::join('\team\parse_url', function($args, $url, $app) {
+ * Un framework debería de proporcionar un sistema de parseo de url propio y dando la opción de reemplazarlo.
+ * Aquí se encuentra el código de parseo de url de TEAM.
+ */
+\Team\System\Task::join('\team\parse_url', function ($args, $url, $app) {
     $others_characters = \Team\System\Context::get('URL_EXTRA_CHARS', '');
-
 
     $args->response = \Team\Data\Check::key($args->response, null, $others_characters);
 
-
     $new_url_path_list = $args->url_path_list;
     //Si no hay url que proccesar, obvio que nos saltamos el proceso de parseo,
-    if(!empty($args->url_path_list) ) {
+    if (!empty($args->url_path_list)) {
         $url_path_list = $args->url_path_list;
 
+        /**
+         * El primer subpath númerico sera el id, a no ser que ya haya uno, entonces se sale.
+         * El primer subpath no numérico será el component si no se había añadido
+         * El segundo subpath no numérico será el response si no se había añadido y se sale.
+         * Si se llega a un elemento que no es ninguno de los anteriores, se supone que es parte de la url parseable por el programador
+         * por lo que se vuelve a poner y se sale.
+         */
+        $filters_list = [];
+        $new_url_path_list = [];
+        while (!empty($url_path_list)) {
+            $subpath = array_shift($url_path_list);
+            if (is_numeric($subpath)) {
+                if (!isset($args->id)) {
+                    $args->id = \Team\Data\Check::id($subpath, 0);
+                }
+                $filters_list[] = \Team\Data\Check::id($subpath);
+            } else {
+                $subpath = \Team\Data\Check::key($subpath, null, $others_characters);
+                if (($args->component && $args->response)) {
+                    if (strlen($subpath) < 3) {
+                        $filters_list[] = $subpath;
+                    } else {
+                        $new_url_path_list[] = $subpath;
+                    }
+                } else {
+                    if (empty($filters_list)) {
+                        if (!$args->component) {
+                            $args->component = $subpath;
+                        } else {
+                            $args->response = $subpath;
+                        }
+                    }
+                }
+            }
+        }
 
-		/**
-			El primer subpath númerico sera el id, a no ser que ya haya uno, entonces se sale. 
-			El primer subpath no numérico será el component si no se había añadido
-			El segundo subpath no numérico será el response si no se había añadido y se sale. 
-			Si se llega a un elemento que no es ninguno de los anteriores, se supone que es parte de la url parseable por el programador
-			por lo que se vuelve a poner y se sale.
-		*/
-		$filters_list = [];
-		$new_url_path_list = [];
-		while(!empty($url_path_list) ) {
-			$subpath = array_shift($url_path_list);
-			if(is_numeric($subpath) ) {
-				if(!isset($args->id) ) {
-					$args->id = \Team\Data\Check::id($subpath, 0);
-				}
-				$filters_list[] = \Team\Data\Check::id($subpath);
+        if (!$args->id && !empty($args->item_id)) {
+            $args->id = $args->item_id;
+        }
 
-			}else {
-			    $subpath =  \Team\Data\Check::key($subpath, null, $others_characters);
-				if( ( $args->component && $args->response )  ) {
-					if( strlen($subpath) < 3 ) {
-						$filters_list[] = $subpath;
-					}else {
-						$new_url_path_list[] = $subpath;
-					}
-				}else if(empty($filters_list) ) {
-					if(!$args->component ) {
-                        $args->component =  $subpath;
-					}else {
-						$args->response =  $subpath;
-					}
-				}
-			}
-		}
+        $args->id = \Team\Data\Check::id($args->id);
 
-
-		if(!$args->id && !empty($args->item_id) ) {
-			$args->id = $args->item_id;
-		}
-
-		$args->id = \Team\Data\Check::id($args->id);
-
-        $args->filters_list =$filters_list;
-
-    }else {
+        $args->filters_list = $filters_list;
+    } else {
         $args->filters_list = [];
     }
 
-     $args->url_path_list =  $new_url_path_list ;
-
-
+    $args->url_path_list = $new_url_path_list;
 
     $this->finish();
 
     return $args;
-
 });

@@ -1,9 +1,24 @@
 <?php
+/**
+ * This file is part of TEAM.
+ *
+ * TEAM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 2 of the License.
+ *
+ * TEAM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TEAM.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 namespace Team\Gui;
 
-use \Team\System\Context;
-use \Team\Debug;
+use Team\Debug;
+use Team\System\Context;
 
 //generate a new file.
 require_once(\Team\_VENDOR_ . '/lesserphp/lessc.inc.php');
@@ -21,80 +36,84 @@ class Less
     protected $file_lessed = '';
     protected $need_generation = true;
 
-    public function addFile(& $file_in, $base = null) {
+    public function addFile(& $file_in, $base = null)
+    {
         $with_less_support = strpos($file_in, self::EXTENSION) > 0;
         $this->file_in = str_replace(self::EXTENSION, '', $file_in);
 
-        $this->base = $base?: _SCRIPTS_;
+        $this->base = $base ?: _SCRIPTS_;
         $this->file_out = $this->generateFilenameOut();
 
-        if($this->fileOutCanBeUsed()) {
+        if ($this->fileOutCanBeUsed()) {
             $file_in = $this->file_out;
             $this->need_generation = false;
         }
 
-        if(!$with_less_support) {
+        if (!$with_less_support) {
             $this->file_in_extension = self::CSS_EXTENSION;
         }
 
         return $this->need_generation;
     }
 
-
-    protected function generateFilenameOut() {
+    protected function generateFilenameOut()
+    {
         $current_version = \Team\System\Context::get('VERSION');
         $extension = self::CSS_EXTENSION;
 
         $file_out = "{$this->file_in}-{$current_version}{$extension}";
-        return '/'.ltrim($file_out,'/');
+        return '/' . ltrim($file_out, '/');
     }
 
-    protected function fileOutCanBeUsed() {
-        $file_out_can_be_used = file_exists($this->base.$this->file_out) &&  !$this->isDevEnvironment();
+    protected function fileOutCanBeUsed()
+    {
+        $file_out_can_be_used = file_exists($this->base . $this->file_out) && !$this->isDevEnvironment();
         $force_generation = \Team\Config::get('ASSETS_NEED_GENERATION');
-        if( $file_out_can_be_used || $force_generation) {
+        if ($file_out_can_be_used || $force_generation) {
             return true;
         }
 
         return false;
     }
 
-    protected function isDevEnvironment() {
-    	return  "dev" === \Team\Config::get('ENVIRONMENT') ;
+    protected function isDevEnvironment()
+    {
+        return "dev" === \Team\Config::get('ENVIRONMENT');
     }
 
-    public function parser() {
+    public function parser()
+    {
         $out = $this->file_out;
 
-        if(!$this->need_generation) {
+        if (!$this->need_generation) {
             return $out;
         }
 
         try {
-            $file_in = $this->base.$this->file_in.$this->file_in_extension;
-            $file_out = $this->base.$this->file_out;
+            $file_in = $this->base . $this->file_in . $this->file_in_extension;
+            $file_out = $this->base . $this->file_out;
 
-	    if(!$this->isDevEnvironment() ) {
-            	Debug::me("Gnerating css file for {$file_in}", 4);
-	    }
+            if (!$this->isDevEnvironment()) {
+                Debug::me("Gnerating css file for {$file_in}", 4);
+            }
 
             $parser = $this->getParser();
             $parser->compileFile($file_in, $file_out);
         } catch (\Throwable $e) {
             Debug::me("Error generating file {$file_out} from {$file_in}:" . $e->getMessage(), 4);
 
-            if($this->file_in_extension === self::EXTENSION) {
+            if ($this->file_in_extension === self::EXTENSION) {
                 $out = '';
-            }else {
+            } else {
                 $out = $this->file_in;
             }
-
         }
 
         return $out;
     }
 
-    protected function getParser() {
+    protected function getParser()
+    {
         $less = new \lessc;
         $less->setFormatter("compressed");
         $less->setVariables(Context::get('theme', []));

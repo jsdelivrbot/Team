@@ -1,5 +1,21 @@
 <?php
 /**
+ * This file is part of TEAM.
+ *
+ * TEAM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 2 of the License.
+ *
+ * TEAM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TEAM.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
  * Developed by Manuel Canga ( dev@trasweb.net )
  * Date: 12/01/17
  * Time: 15:46
@@ -7,52 +23,56 @@
 
 namespace Team\Data;
 
-
 trait Vars
 {
 
-
-
-    public static function replace($var, $value = null) {
+    public static function replace($var, $value = null)
+    {
         self::$vars[$var] = $value;
     }
 
-    public static function set($var, $value = null) {
+    public static function set($var, $value = null)
+    {
         $old_value = null;
 
-        if(is_array($var)) {
-            self::$vars =  $var + self::$vars;
-        }else if(is_string($var)){
-            $old_value = self::$vars[$var]?? $old_value;
+        if (is_array($var)) {
+            self::$vars = $var + self::$vars;
+        } else {
+            if (is_string($var)) {
+                $old_value = self::$vars[$var] ?? $old_value;
 
-            self::$vars[$var] = $value;
+                self::$vars[$var] = $value;
+            }
         }
 
         return $old_value;
     }
 
-    public static function push($var, $value = null) {
-        if(!isset(self::$vars[$var]) || is_array(self::$vars[$var])) {
+    public static function push($var, $value = null)
+    {
+        if (!isset(self::$vars[$var]) || is_array(self::$vars[$var])) {
             self::$vars[$var][] = $value;
         }
     }
 
-    public static function add($var, $key, $value = null) {
-        if(!isset(self::$vars[$var]) || is_array(self::$vars[$var])) {
+    public static function add($var, $key, $value = null)
+    {
+        if (!isset(self::$vars[$var]) || is_array(self::$vars[$var])) {
             self::$vars[$var][$key] = $value;
         }
     }
 
-    public static function unset($var, $key = null) {
-        if(isset($key)) {
-            if(isset(self::$vars[$var][$key])) {
+    public static function unset($var, $key = null)
+    {
+        if (isset($key)) {
+            if (isset(self::$vars[$var][$key])) {
                 unset(self::$vars[$var][$key]);
                 return true;
             }
             return false;
         }
 
-        if(isset(self::$vars[$var])) {
+        if (isset(self::$vars[$var])) {
             unset(self::$vars[$var]);
             return true;
         }
@@ -60,36 +80,40 @@ trait Vars
         return false;
     }
 
-
-    public static function get($var, $default = null){
-            return self::$vars[$var]?? $default;
+    public static function get($var, $default = null)
+    {
+        return self::$vars[$var] ?? $default;
     }
 
-    public static function getKey(string $key, string $var_name, $default = null, $place = null) {
-        $var =  self::get($var_name, $default, $place);
-        return $var[$key]?? $default;
+    public static function getKey(string $key, string $var_name, $default = null, $place = null)
+    {
+        $var = self::get($var_name, $default, $place);
+        return $var[$key] ?? $default;
     }
 
-    public static function getVars() {
+    public static function getVars()
+    {
         return self::$vars;
     }
 
-    public static function defaults($vars) {
-        self::$vars +=  $vars;
+    public static function defaults($vars)
+    {
+        self::$vars += $vars;
     }
 
-    public static function exists($var) {
+    public static function exists($var)
+    {
         return array_key_exists($var, self::$vars);
     }
 
-
-    public static function debug($var_name = null, $label = 'values') {
+    public static function debug($var_name = null, $label = 'values')
+    {
         $backtrace = debug_backtrace();
         $file = $backtrace[0]['file'];
         $line = $backtrace[0]['line'];
 
         $var = self::$vars;
-        if(isset($var_name)) {
+        if (isset($var_name)) {
             $label = $var_name;
             $var = self::get($var_name);
         }

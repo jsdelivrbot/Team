@@ -1,37 +1,26 @@
 <?php
 /**
- * New Licence bsd:
- * Copyright (c) <2016>, Manuel Jesus Canga Muñoz
- * All rights reserved.
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * - Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- * - Neither the name of the trasweb.net nor the
- *  names of its contributors may be used to endorse or promote products
- * derived from this software without specific prior written permission.
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Manuel Jesus Canga Muñoz BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * This file is part of TEAM.
+ *
+ * TEAM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 2 of the License.
+ *
+ * TEAM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TEAM.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 namespace Team;
 
-
 /**
-Filesystem absolute path until root directory of Team Framework
-( always without / end )
-@since 0.1
+ * Filesystem absolute path until root directory of Team Framework
+ * ( always without / end )
+ * @since 0.1
  */
 define('_TEAM_', __DIR__);
 
@@ -70,7 +59,7 @@ require(\_TEAM_ . '/System/Task.php');
 require(\_TEAM_ . '/Notices/Log.php');
 require(\_TEAM_ . '/Debug.php');
 
-if(!class_exists('Debug', false)) {
+if (!class_exists('Debug', false)) {
     class_alias('\team\Debug', 'Debug', false);
 }
 
@@ -85,32 +74,25 @@ require(\_TEAM_ . '/Client/Http.php');
 //Clase que maneja base de datos
 require(\_TEAM_ . '/System/DB.php');
 
-
 try {
-
-    require \_TEAM_. '/Predefined/config.inc.php';
-    require \_TEAM_. '/Predefined/tasks.inc.php';
-    require \_TEAM_. '/Predefined/filters.inc.php';
+    require \_TEAM_ . '/Predefined/config.inc.php';
+    require \_TEAM_ . '/Predefined/tasks.inc.php';
+    require \_TEAM_ . '/Predefined/filters.inc.php';
 
     //Llamamos para que el proyecto inicie sus config, tasks, filters, ...
     \Team\System\FileSystem::load('/config/setup.php', \Team\_SERVER_);
-    \Team\System\FileSystem::load('/'. \Team\Config::get('ENVIRONMENT').'/setup.php', \Team\_CONFIG_);
+    \Team\System\FileSystem::load('/' . \Team\Config::get('ENVIRONMENT') . '/setup.php', \Team\_CONFIG_);
 
-    require \_TEAM_. '/Predefined/system.inc.php';
-
-
+    require \_TEAM_ . '/Predefined/system.inc.php';
 //Evitamos a toda costa que se quede congelado el sistema
-}catch(\Throwable $e) { 
-	\Team::critical($e);
-
+} catch (\Throwable $e) {
+    \Team::critical($e);
 }
 
-
-function up() {
-
-   \Team\Debug::trace();
+function up()
+{
+    \Team\Debug::trace();
     try {
-
         \Team\Debug::trace("Se inicializo el contexto. Ya podemos empezar a inicializar todo el framwork");
 
         /**
@@ -118,34 +100,27 @@ function up() {
          */
         \Team::event('\team\start');
 
-
         /**
          * 7. Se parsea los parámetros de entrada
          */
         $REQUEST_URI = \Team\Data\Filter::apply('\team\request_uri', $_SERVER["REQUEST_URI"]);
-        $args = \Team\System\Task('\team\url', array() )->with($REQUEST_URI);
-
+        $args = \Team\System\Task('\team\url', array())->with($REQUEST_URI);
 
         /**
          * 8. Se llama al encargado( un componente o función __main ) de procesar el primer response o main
          */
-        $result =  \Team\System\Task('\team\main', '')->with($args);
+        $result = \Team\System\Task('\team\main', '')->with($args);
 
         \Team\Debug::trace("Se acabó, ya hemos realizado todas las operaciones pedidas. Bye!");
-
 
         /**
          * 9. Se acaba de procesar y se devuelve la respuesta
          */
         \Team::event('\team\end', $result);
 
-
         return $result;
-
-
         //Evitamos a toda costa que se quede congelado el sistema
-    }catch(\Throwable $e) {
+    } catch (\Throwable $e) {
         \Team::critical($e);
-
     }
 }
