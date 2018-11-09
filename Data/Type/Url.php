@@ -52,7 +52,7 @@ class Url extends Type
         $url = $this->getUrlParams();
 
         //Asignamos los parámetros get por si no los ha cogido bien por la configuracion de apache
-        $query_strings = $this->parseQueryString($url['query'] ?? []);
+        parse_str($url['query'] ?? '', $query_strings);
         $this->args = $this->args + $query_strings;
 
         //Assign defaults params
@@ -66,15 +66,6 @@ class Url extends Type
     protected function getUrlParams()
     {
         return parse_url($this->args["raw"]);
-    }
-
-    protected function parseQueryString($query_string)
-    {
-        if (!empty($query_string)) {
-            parse_str($query_string, $query);
-        }
-
-        return (array)$query_string;
     }
 
     protected function parsePath($path)
