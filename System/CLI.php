@@ -25,6 +25,12 @@ use Team\System\CLI\Options;
 class CLI
 {
     /**
+     * List of ignored commands.
+     * Example: php ./upgrade.php users
+     * The command is './upgrade.php' and not 'php'
+     */
+    private const COMMANDS_TO_IGNORE = ['php'];
+    /**
      * Value for PHP_SAPI for indicating cli environment
      */
     private const CLI_SAPI = 'cli';
@@ -76,16 +82,34 @@ class CLI
             return;
         }
 
-        /**
-         * First argument is name of command( ej: php ./site/index.php -> command: index )
-         */
-        $command_with_path = array_shift($argv);
-        $this->command = FileSystem::basename($command_with_path);
-
-        //minus because command is out now
-        $this->argc = --$argc;
+        $this->command = $this->extractCommand($argv, $argc);
+        $this->argc = $argc;
         $this->raw_argv = $argv;
         $this->options = $this->extractOptions($this->raw_argv);
+    }
+
+    /**
+     * First argument is name of command( ej: php ./site/index.php -> command: index )
+     * This funciton extract that argument
+     *
+     * @param array $argv
+     * @param int $argc
+     *
+     * @return string
+     */
+    private function extractCommand(array & $argv, int & $argc): string
+    {
+        $command_with_path = \array_shift($argv);
+        $command = FileSystem::basename($command_with_path);
+
+        //minus because command is out now
+        --$argc;
+
+        if (\in_array($command, self::COMMANDS_TO_IGNORE, true)) {
+            $command = $this->extractCommand($argv, $argc);
+        }
+
+        return $command;
     }
 
     /**
