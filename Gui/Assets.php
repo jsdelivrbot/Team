@@ -31,10 +31,10 @@ trait Assets
     {
         $CSS_EXTENSION = '.css';
 
-        $file = str_replace($CSS_EXTENSION, '', $file);
+        $file = \Team\System\FileSystem::stripExtension($file,  $CSS_EXTENSION);
 
         // maybe double slash(//) is used  => '//file.css'
-        $is_external_css = strpos('//', $file) !== false;
+        $is_external_css = strpos($file, '//') !== false;
 
         $idfile = $idfile ?? \Team\Data\Sanitize::identifier($file);
 
@@ -62,10 +62,10 @@ trait Assets
      */
     public function addJs($file, $position = 'bottom', $idfile = null)
     {
-        $file = str_replace('.js', '', $file);
+        $file = \Team\System\FileSystem::stripExtension($file, '.js');
 
         // maybe double slash(//) is used  => '//file.js'
-        $is_external_js = strpos('//', $file) !== false;
+        $is_external_js = strpos($file, '//') !== false;
         $idfile = $idfile ?? \Team\Data\Sanitize::identifier($file);
 
         if (!$is_external_js) {
@@ -81,5 +81,4 @@ trait Assets
             \Team\Debug::me("Javascript file[$position] $file not found", 3);
         }
     }
-
 }

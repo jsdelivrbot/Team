@@ -20,7 +20,7 @@ namespace Team\System;
 /** **************************************************************************************
  * Funciones útiles para el trabajo a bajo nivel con el sistema de archivo
  *************************************************************************************** */
-final  class Filesystem
+final class Filesystem
 {
     const BYTE = 1;
     const KB_IN_BYTES = 1024 * self::BYTE;
@@ -99,12 +99,19 @@ final  class Filesystem
         return self::stripExtension(basename($_file));
     }
 
-    public static function stripExtension($_file, $_new_extension = '')
+    /**
+     * Remove extension from file. E.g:  styles.css => styles
+     * @param string $file filename with extension to remove
+     * @param null|string $extension_to_remove Remove this specific extension
+     * @return string return file without extension or without specific extension
+     */
+    public static function stripExtension(string $file, ?string $extension_to_remove = null): string
     {
-        //Usanso ?! se evita que se borre a partir de directorios con punto. Ejemplo: /misitio.net/prueba.php
-        //Pues se toma la última ocurrencia
-        //resultado /misitio.net/prueba  sin usarlo quedaría como /misitio
-        return preg_replace('/[\.].*(?!.*[\.].*)/', '', $_file) . $_new_extension;
+        if (isset($extension_to_remove)) {
+            return str_replace($extension_to_remove, '', $file);
+        }
+
+        return preg_replace('/\\.[^.\\s]{2,4}$/u', '', $file);
     }
 
     /**
@@ -178,7 +185,6 @@ final  class Filesystem
             $dirs = array();        //arrays for saving directories.
             if ($dhandle) {
                 while (false !== ($fname = readdir($dhandle))) {    //loop de archivos.
-
                     //No consideraremos directorios validos los que
                     //empiecen por "." o por "_" . Tampoco los llamados commons
                     if ('.' == $fname[0] || '_' == $fname[0]) {
@@ -261,8 +267,10 @@ final  class Filesystem
             return false;
         }
 
-        $base_upload = $options['dir'] ?? \Team\System\Context::get('BASE_UPLOAD',
-                \Team\System\Date::current('base_upload'));
+        $base_upload = $options['dir'] ?? \Team\System\Context::get(
+            'BASE_UPLOAD',
+            \Team\System\Date::current('base_upload')
+        );
         $uploads_path = $options['path'] ?? self::getUploadsDir();
 
         self::mkdirRecursive($uploads_path . $base_upload);
